@@ -24,7 +24,8 @@ CREATE TABLE Genres_Artists (
 CREATE TABLE Albums (
     id SERIAL PRIMARY KEY,
     title VARCHAR(255) NOT NULL,
-    release_year INT NOT NULL
+    release_year INT NOT NULL,
+    CHECK (release_year BETWEEN 1900 AND 2999)
 );
 
 -- Создание таблицы Albums_Artists (связь "многие ко многим" между Albums и Artists)
@@ -42,6 +43,7 @@ CREATE TABLE Tracks (
     title VARCHAR(255) NOT NULL,
     duration INT NOT NULL,
     album_id INT NOT NULL,
+    CHECK (duration > 0),
     FOREIGN KEY (album_id) REFERENCES Albums(id) ON DELETE CASCADE
 );
 
