@@ -51,7 +51,8 @@ CREATE TABLE Tracks (
 CREATE TABLE Compilations (
     id SERIAL PRIMARY KEY,
     title VARCHAR(255) NOT NULL,
-    release_year INT NOT NULL
+    release_year INT NOT NULL,
+    CHECK (release_year BETWEEN 1900 AND 2999)
 );
 
 -- Создание таблицы Compilations_Tracks (связь "многие ко многим" между Compilations и Tracks)
