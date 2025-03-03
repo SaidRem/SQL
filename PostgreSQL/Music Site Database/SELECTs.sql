@@ -90,11 +90,11 @@ SELECT al.title
 FROM Albums al
 JOIN Albums_Artists aa ON al.id = aa.album_id AND 
 aa.artist_id IN (
-				 SELECT artist_id
-				 FROM Genres_Artists
-				 GROUP BY artist_id
-				 HAVING count(artist_id) > 1
-				);
+	SELECT artist_id
+	FROM Genres_Artists
+	GROUP BY artist_id
+	HAVING count(artist_id) > 1
+);
 
 -- 4.1.2 Названия альбомов, в которых присутствуют исполнители более чем одного жанра.
 SELECT al.title
