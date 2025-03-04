@@ -41,9 +41,9 @@ CREATE TABLE Albums_Artists (
 CREATE TABLE Tracks (
     id SERIAL PRIMARY KEY,
     title VARCHAR(255) NOT NULL,
-    duration INT NOT NULL,
+    durations INT NOT NULL,
     album_id INT NOT NULL,
-    CHECK (duration > 0),
+    CHECK (durations > 0),
     FOREIGN KEY (album_id) REFERENCES Albums(id) ON DELETE CASCADE
 );
 
