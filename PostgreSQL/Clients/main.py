@@ -4,9 +4,9 @@ from psycopg2.extras import DictCursor
 import copy
 import logging
 
-logging.basicConfig(
-    level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
-    )
+logging.basicConfig(level=logging.INFO,
+                    format="%(asctime)s - %(levelname)s - %(message)s"
+                    )
 
 
 def create_database(dbname, conn_params):
@@ -111,9 +111,10 @@ class PostgreSQLDatabase:
                 cur.execute(query, params or ())
                 self.connection.commit()
         except psycopg2.Error as err:
+            self.connection.rollback()
             logging.error(f"Error executing query: {err}")
 
-    def _fetch_query(self, query, params=None):
+    def _fetch_all(self, query, params=None):
         if self.connection is None:
             self.connect()
         try:
@@ -121,6 +122,7 @@ class PostgreSQLDatabase:
                 cur.execute(query, params or ())
                 return cur.fetchall()
         except psycopg2.Error as err:
+            self.connection.rollback()
             logging.error(f"Error executing query: {err}")
             return None
 
@@ -132,6 +134,7 @@ class PostgreSQLDatabase:
                 cur.execute(query, params or ())
                 return cur.fetchone()
         except psycopg2.Error as err:
+            self.connection.rollback()
             logging.error(f"Error executing query: {err}")
             return None
 
@@ -144,10 +147,72 @@ class PostgreSQLDatabase:
 
     def add_phone(self, client_id, phone):
         query = sql.SQL("""
-            INSERT INTO phones (client_id, phone)
+            INSERT INTO phones (client_id, phone_number)
             VALUES (%s, %s);
         """)
         self._execute_query(query, (client_id, phone))
+
+    def update_client(self, client_id, first_name=None, last_name=None, email=None):
+        updates = []
+        params = []
+
+        if first_name:
+            updates.append("first_name = %s")
+            params.append(first_name)
+        if last_name:
+            updates.append("last_name = %s")
+            params.append(last_name)
+        if email:
+            updates.append("email = %s")
+            params.append(email)
+
+        if updates:
+            query = sql.SQL("UPDATE clients SET {} WHERE id = %s").format(
+                sql.SQL(", ").join(map(sql.SQL, updates)))
+            params.append(client_id)
+            self._execute_query(query, params)
+
+    def delete_phone(self, client_id, phone):
+        query = sql.SQL("""
+            DELETE FROM phones WHERE client_id = %s AND phone_number = %s;
+            """)
+        self._execute_query(query, (client_id, phone))
+
+    def delete_client(self, client_id):
+        query = sql.SQL("""
+            DELETE FROM clients WHERE id = %s
+        """)
+        self._execute_query(query, (client_id,))
+
+    def find_client(self, first_name=None, last_name=None, email=None, phone_number=None):
+        query = sql.SQL("""
+            SELECT c.first_name, c.last_name, c.email, p.phone_number
+            FROM clients c
+            LEFT JOIN phones p ON c.id = p.client_id
+            WHERE 1=1
+        """)
+
+        conditions = []
+        params = []
+
+        if first_name:
+            conditions.append(sql.SQL("c.first_name = %s"))
+            params.append(first_name)
+        if last_name:
+            conditions.append(sql.SQL("c.last_name = %s"))
+            params.append(last_name)
+        if email:
+            conditions.append(sql.SQL("c.email = %s"))
+            params.append(email)
+        if phone_number:
+            conditions.append(sql.SQL("p.phone_number = %s"))
+            params.append(phone_number)
+
+        if conditions:
+            query = query + sql.SQL(" AND ") + sql.SQL(" AND ").join(conditions)
+
+        result = self._fetch_all(query, params)
+        return result
 
 
 if __name__ == "__main__":
@@ -165,3 +230,24 @@ if __name__ == "__main__":
     conn_params_newdb["dbname"] = "clients_db"
     db = PostgreSQLDatabase(**conn_params_newdb)
     db.connect()
+
+    db.add_client("John", "Doe", "john@mail.com")
+    db.add_client("Adam", "Smit", "adam_smit@mail.com")
+    db.add_client("Jane", "Doe", "jane_doe@mail.com")
+
+    db.add_phone(1, '89171235678')
+    db.add_phone(1, '89171235679')
+
+    result = db.find_client()
+
+    for client in result:
+        print(f"name: {client[0]} | surname: {client[1]} | email: {client[2]} | tel: {client[3]}")
+
+    result = db.find_client(last_name="Smit")
+    for client in result:
+        print(f"name: {client[0]} | surname: {client[1]} | email: {client[2]} | tel: {client[3]}")
+
+    db.delete_phone(1, '89171235678')
+    db.delete_client(3)
+
+    db.update_client(5, email="john.doe@mail.com")
