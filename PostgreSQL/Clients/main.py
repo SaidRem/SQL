@@ -250,4 +250,4 @@ if __name__ == "__main__":
     db.delete_phone(1, '89171235678')
     db.delete_client(3)
 
-    db.update_client(5, email="john.doe@mail.com")
+    db.update_client(1, email="john.doe@mail.com")
