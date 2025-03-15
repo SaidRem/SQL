@@ -38,7 +38,7 @@ class Stock(Base):
     id_book = Column(Integer, ForeignKey("book.id"), nullable=False)
     id_shop = Column(Integer, ForeignKey("shop.id"), nullable=False)
     count = Column(Integer, nullable=False, default=0)
-    book = relationship("Shop", back_populates="stocks")
+    book = relationship("Book", back_populates="stocks")
     shop = relationship("Shop", back_populates="stocks")
     sales = relationship("Sale", back_populates="stock")
 
