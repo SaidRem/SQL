@@ -14,7 +14,7 @@ class Publisher(Base):
 
 
 class Book(Base):
-    __tablename__ = "books"
+    __tablename__ = "book"
 
     id = Column(Integer, primary_key=True)
     title = Column(String, nullable=False)
@@ -52,3 +52,8 @@ class Sale(Base):
     id_stock = Column(Integer, ForeignKey("stock.id"), nullable=False)
     count = Column(Integer, nullable=False, default=1)
     stock = relationship("Stock", back_populates="sales")
+
+
+def create_tables(engine):
+    Base.metadata.drop_all(engine)
+    Base.metadata.create_all(engine)
